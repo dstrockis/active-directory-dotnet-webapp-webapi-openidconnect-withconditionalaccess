@@ -27,7 +27,7 @@ Every Azure subscription has an associated Azure Active Directory tenant.  If yo
 
 From your shell or command line:
 
-`git clone https://github.com/AzureADSamples/active-directory-dotnet-webapp-webapi-openidconnect-conditionalaccess.git`
+`git clone https://github.com/AzureADSamples/active-directory-dotnet-webapp-webapi-openidconnect-withconditionalaccess.git`
 
 ### Step 2:  Create a user account in your Azure Active Directory tenant
 
