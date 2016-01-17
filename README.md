@@ -4,7 +4,7 @@ platforms: dotnet
 author: skwan
 ---
 
-# Calling a web API in a web app using Azure AD and OpenID Connect where the web API has conditional access policies applied  
+# Calling a web API in a web app where the web API has conditional access policies applied  
 
 This sample builds on the web app calling web API sample (activedirectory-dotnet-webapp-webapi-openidconnect) and includes code to handle the case where the web API has conditional access policies applied.
 
@@ -27,7 +27,7 @@ Every Azure subscription has an associated Azure Active Directory tenant.  If yo
 
 From your shell or command line:
 
-`git clone https://github.com/AzureADSamples/active-directory-dotnet-webapp-webapi-openidconnect-withconditionalaccess.git`
+`git clone https://github.com/AzureADSamples/active-directory-dotnet-webapp-webapi-openidconnect-conditionalaccess.git`
 
 ### Step 2:  Create a user account in your Azure Active Directory tenant
 
