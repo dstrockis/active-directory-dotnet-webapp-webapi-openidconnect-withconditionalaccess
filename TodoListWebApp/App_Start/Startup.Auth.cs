@@ -95,6 +95,8 @@ namespace TodoListWebApp
                         },
 
                         //
+                        // WithConditionalAccess:
+                        //
                         // If the request is for a specific resource, add the resource parameter here.
                         //
                         RedirectToIdentityProvider = (context) =>

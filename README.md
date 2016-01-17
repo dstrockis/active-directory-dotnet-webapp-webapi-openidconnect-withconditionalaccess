@@ -6,9 +6,9 @@ author: skwan
 
 # Calling a web API in a web app where the web API has conditional access policies applied  
 
-This sample builds on the web app calling web API sample (activedirectory-dotnet-webapp-webapi-openidconnect) and includes code to handle the case where the web API has conditional access policies applied.
+This sample builds on the web app calling web API sample (activedirectory-dotnet-webapp-webapi-openidconnect) and includes code to handle the case where the web API has conditional access policies applied.  Search the project for the string WithConditionalAccess: to find all the places where code has been added or modified.
 
-If a conditional access policy is applied to the web API, for example multi-factor authentication is required, and the user didn't satisfy the policy during initial sign in, then a silent attempt to get a token for the web API will fail.  In the TodoListController and UserProfileController, code is added in the exception handling to add a resource ID to the authentication properties dictionary, which is picked up in the RedirectToIdentityProvider notification in Startup.Auth.cs so that the resource parameter is attached to the authentication request.  This ensures that when the user is asked to authenticate, the policy for that resource will be enforced. 
+If a conditional access policy is applied to the web API, for example multi-factor authentication is required, and the user didn't satisfy the policy during initial sign in, then a silent attempt to get a token for the web API will fail.  The web app needs to send the user through an OAuth authorize request for the specific resource, so that Azure AD can enforce the conditional access policy.  In the TodoListController and UserProfileController, code is added in the exception handling to add a resource ID to the authentication properties dictionary, which is picked up in the RedirectToIdentityProvider notification in Startup.Auth.cs so that the resource parameter is attached to the authentication request.  This ensures that when the user is asked to authenticate, the policy for that resource will be enforced. 
 
 Note:  The code of the TodoListService project in this sample is unchanged from the stock activedirectory-dotnet-webapp-webapi-openidconnect sample.  No code changes are required to set conditional access policies on a service.
 

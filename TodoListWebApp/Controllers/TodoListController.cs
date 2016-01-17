@@ -34,6 +34,9 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace TodoListWebApp.Controllers
 {
+    //
+    // WithConditionalAccess:
+    //
     // In this example we will not use automatic authentication at the controller level.
     // If the user is not authenticated we need to manually send an authentication request with the right resource parameter.
     // [Authorize]
@@ -51,6 +54,8 @@ namespace TodoListWebApp.Controllers
             AuthenticationResult result = null;
             List<TodoItem> itemList = new List<TodoItem>();
 
+            //
+            // WithConditionalAccess:
             //
             // Check if the user is authenticated.  If not, issue a challenge for this resource.
             //
@@ -134,7 +139,7 @@ namespace TodoListWebApp.Controllers
                     // If the user still has a valid session with Azure AD, they will not be prompted for their credentials.
                     // The OpenID Connect middleware will return to this controller after the sign-in response has been handled.
                     //
-                    // NEW:  Include the Resource ID for which a token is being requested.
+                    // WithConditionalAccess:  Include the Resource ID for which a token is being requested.
                     //
                     HttpContext.GetOwinContext().Authentication.Challenge(
                         new Microsoft.Owin.Security.AuthenticationProperties (
