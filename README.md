@@ -1,12 +1,16 @@
 ---
 services: active-directory
 platforms: dotnet
-author: dstrockis
+author: skwan
 ---
 
-# Calling a web API in a web app using Azure AD and OpenID Connect  
+# Calling a web API in a web app using Azure AD and OpenID Connect where the web API has conditional access policies applied  
 
-This sample shows how to build an MVC web application that uses Azure AD for sign-in using the OpenID Connect protocol, and then calls a web API under the signed-in user's identity using tokens obtained via OAuth 2.0. This sample uses the OpenID Connect ASP.Net OWIN middleware and ADAL .Net.
+This sample builds on the web app calling web API sample (activedirectory-dotnet-webapp-webapi-openidconnect) and includes code to handle the case where the web API has conditional access policies applied.
+
+If a conditional access policy is applied to the web API, for example multi-factor authentication is required, and the user didn't satisfy the policy during initial sign in, then a silent attempt to get a token for the web API will fail.  In the TodoListController and UserProfileController, code is added in the exception handling to add a resource ID to the authentication properties dictionary, which is picked up in the RedirectToIdentityProvider notification in Startup.Auth.cs so that the resource parameter is attached to the authentication request.  This ensures that when the user is asked to authenticate, the policy for that resource will be enforced. 
+
+Note:  The code of the TodoListService project in this sample is unchanged from the stock activedirectory-dotnet-webapp-webapi-openidconnect sample.  No code changes are required to set conditional access policies on a service.
 
 For more information about how the protocols work in this scenario and other scenarios, see [Authentication Scenarios for Azure AD](http://go.microsoft.com/fwlink/?LinkId=394414).
 
@@ -23,7 +27,7 @@ Every Azure subscription has an associated Azure Active Directory tenant.  If yo
 
 From your shell or command line:
 
-`git clone https://github.com/Azure-Samples/active-directory-dotnet-webapp-webapi-openidconnect.git`
+`git clone https://github.com/AzureADSamples/active-directory-dotnet-webapp-webapi-openidconnect-withconditionalaccess.git`
 
 ### Step 2:  Create a user account in your Azure Active Directory tenant
 
@@ -41,9 +45,9 @@ There are two projects in this sample.  Each needs to be separately registered i
 4. Click the Applications tab.
 5. In the drawer, click Add.
 6. Click "Add an application my organization is developing".
-7. Enter a friendly name for the application, for example "TodoListService", select "Web Application and/or Web API", and click next.
+7. Enter a friendly name for the application, for example "TodoListService-withConditionalAccess", select "Web Application and/or Web API", and click next.
 8. For the sign-on URL, enter the base URL for the sample, which is by default `https://localhost:44321`.
-9. For the App ID URI, enter `https://<your_tenant_name>/TodoListService`, replacing `<your_tenant_name>` with the name of your Azure AD tenant.  Click OK to complete the registration.
+9. For the App ID URI, enter `https://<your_tenant_name>/TodoListService-WithConditionalAccess`, replacing `<your_tenant_name>` with the name of your Azure AD tenant.  Click OK to complete the registration.
 10. While still in the Azure portal, click the Configure tab of your application.
 11. Find the Client ID value and copy it aside, you will need this later when configuring your application.
 
@@ -55,13 +59,13 @@ There are two projects in this sample.  Each needs to be separately registered i
 4. Click the Applications tab.
 5. In the drawer, click Add.
 6. Click "Add an application my organization is developing".
-7. Enter a friendly name for the application, for example "TodoListWebApp", select "Web Application and/or Web API", and click next.
+7. Enter a friendly name for the application, for example "TodoListWebApp-WithConditionalAccess", select "Web Application and/or Web API", and click next.
 8. For the sign-on URL, enter the base URL for the sample, which is by default `https://localhost:44322/`.  NOTE:  It is important, due to the way Azure AD matches URLs, to ensure there is a trailing slash on the end of this URL.  If you don't include the trailing slash, you will receive an error when the application attempts to redeem an authorization code.
-9. For the App ID URI, enter `https://<your_tenant_name>/TodoListWebApp`, replacing `<your_tenant_name>` with the name of your Azure AD tenant.  Click OK to complete the registration.
+9. For the App ID URI, enter `https://<your_tenant_name>/TodoListWebApp-WithConditionalAccess`, replacing `<your_tenant_name>` with the name of your Azure AD tenant.  Click OK to complete the registration.
 10. While still in the Azure portal, click the Configure tab of your application.
 11. Find the Client ID value and copy it aside, you will need this later when configuring your application.
 12. Create a new key for the application.  Save the configuration so you can view the key value.  Save this aside for when you configure the project in Visual Studio.
-13. In "Permissions to Other Applications", click "Add Application."  Select "Other" in the "Show" dropdown, and click the upper check mark.  Locate & click on the TodoListService, and click the bottom check mark to add the application.  Select "Access TodoListService" from the "Delegated Permissions" dropdown, and save the configuration.
+13. In "Permissions to Other Applications", click "Add Application."  Select "Other" in the "Show" dropdown, and click the upper check mark.  Locate & click on TodoListService-WithConditionalAccess, and click the bottom check mark to add the application.  Select "Access TodoListService" from the "Delegated Permissions" dropdown, and save the configuration.
 
 ### Step 4:  Configure the sample to use your Azure AD tenant
 
@@ -70,7 +74,7 @@ There are two projects in this sample.  Each needs to be separately registered i
 1. Open the solution in Visual Studio 2013.
 2. Open the `web.config` file.
 3. Find the app key `ida:Tenant` and replace the value with your AAD tenant name.
-4. Find the app key `ida:Audience` and replace the value with the App ID URI you registered earlier, for example `https://<your_tenant_name>/TodoListService`.
+4. Find the app key `ida:Audience` and replace the value with the App ID URI you registered earlier, for example `https://<your_tenant_name>/TodoListService-WithConditionalAccess`.
 
 #### Configure the TodoListWebApp project
 
@@ -81,7 +85,7 @@ There are two projects in this sample.  Each needs to be separately registered i
 5. Find the app key `ida:AppKey` and replace the value with the key for the TodoListWebApp from the Azure portal.
 6. If you changed the base URL of the TodoListWebApp sample, find the app key `ida:PostLogoutRedirectUri` and replace the value with the new base URL of the sample.
 7. Find the app key `todo:TodoListBaseAdress` ane make sure it has the correct value for the address of the TodoListService project.
-8. Find the app key `todo:TodoListResourceId` and replace the value with the App ID URI registered for the TodoListService, for example `https://<your_tenant_name>/TodoListService`.
+8. Find the app key `todo:TodoListResourceId` and replace the value with the App ID URI registered for the TodoListService, for example `https://<your_tenant_name>/TodoListService-WithConditionalAccess`.
 
 ### Step 5:  Trust the IIS Express SSL certificate
 
@@ -121,13 +125,15 @@ You can verify the certificate is in the Trusted Root store by running this comm
 
 ### Step 6:  Run the sample
 
-Clean the solution, rebuild the solution, and run it.  You might want to go into the solution properties and set both projects as startup projects, with the service project starting first.
+First, clean the solution and rebuild the solution.  You might want to go into the solution properties and set both projects as startup projects, with the service project starting first.
 
-Explore the sample by signing in, clicking the User Profile and To Do List links, adding items to the To Do list, signing out, and starting again.
+Second, run the solution without any conditional access policy applied to TodoListService-WithConditionalAccess.  Click on the User Profile and To Do List links and note that the user is required to sign in once, but after that they can click between the links without being interrupted to sign in again.
+
+Third, go to the Azure management portal, and navigate to the Configure page for TodoListService-WithConditionalAccess.  Find the section on the page for Multi-Factor Authentication and Location Based Access Rules.  Set the rules to require MFA for all users.  Now go back to the To Do web app, sign out, sign in again using the Sign In button, then click the To Do list link.  The user will be required to sign in with MFA.
 
 ## How To Deploy This Sample to Azure
 
-To deploy the TodoListService and TodoListWebApp to Azure Web Sites, you will create two web sites, publish each project to a web site, and update the TodoListWebApp to call the web site instead of IIS Express.
+To deploy the TodoListService-WithConditionalAccess and TodoListWebApp-WithConditionalAccess to Azure Web Sites, you will create two web sites, publish each project to a web site, and update the TodoListWebApp-WithConditionalAccess to call the web site instead of IIS Express.
 
 ### Create and Publish the TodoListService to an Azure Web Site
 
@@ -136,7 +142,7 @@ To deploy the TodoListService and TodoListWebApp to Azure Web Sites, you will cr
 3. Click New in the bottom left hand corner, select Compute --> Web Site --> Quick Create, select the hosting plan and region, and give your web site a name, e.g. todolistservice-contoso.azurewebsites.net.  Click Create Web Site.
 4. Once the web site is created, click on it to manage it.  For this set of steps, download the publish profile and save it.  Other deployment mechanisms, such as from source control, can also be used.
 5. Switch to Visual Studio and go to the TodoListService project.  Right click on the project in the Solution Explorer and select Publish.  Click Import, and import the publish profile that you just downloaded.
-6. On the Connection tab, update the Destination URL so that it is https, for example https://todolistservice-skwantoso.azurewebsites.net.  Click Next.
+6. On the Connection tab, update the Destination URL so that it is https, for example https://todolistservicewithconditionalaccess-contoso.azurewebsites.net.  Click Next.
 7. On the Settings tab, make sure Enable Organizational Authentication is NOT selected.  Click Publish.
 8. Visual Studio will publish the project and automatically open a browser to the URL of the project.  If you see the default web page of the project, the publication was successful.
 
@@ -144,31 +150,31 @@ To deploy the TodoListService and TodoListWebApp to Azure Web Sites, you will cr
 
 1. Navigate to the [Azure management portal](https://manage.windowsazure.com).
 2. Click on Web Sites in the left hand nav.
-3. Click New in the bottom left hand corner, select Compute --> Web Site --> Quick Create, select the hosting plan and region, and give your web site a name, e.g. todolistwebapp-contoso.azurewebsites.net.  Click Create Web Site.
+3. Click New in the bottom left hand corner, select Compute --> Web Site --> Quick Create, select the hosting plan and region, and give your web site a name, e.g. todolistwebappwithconditionalaccess-contoso.azurewebsites.net.  Click Create Web Site.
 4. Once the web site is created, click on it to manage it.  For this set of steps, download the publish profile and save it.  Other deployment mechanisms, such as from source control, can also be used.
 
 ### Update the TodoListWebApp to call the TodoListService Running in Azure Web Sites
 
 1. In Visual Studio, go to the TodoListWebApp project.
-2. Open `web.config`.  Two changes are needed - first, update the `todo:TodoListBaseAddress` key value to be the address of the website you published, e.g. https://todolistservice-skwantoso.azurewebsites.net.  Second, update the `ida:PostLogoutRedirectUri` key value to be the address of website you published, e.g. https://todolistwebapp-skwantoso.azurewebsites.net.
+2. Open `web.config`.  Two changes are needed - first, update the `todo:TodoListBaseAddress` key value to be the address of the website you published, e.g. https://todolistservicewithconditionalaccess-contoso.azurewebsites.net.  Second, update the `ida:PostLogoutRedirectUri` key value to be the address of website you published, e.g. https://todolistwebappwithconditionalaccess-contoso.azurewebsites.net.
 
 ### Update the Application Configurations in the Directory Tenant
 
 1. Navigate to the [Azure management portal](https://manage.windowsazure.com).
 2. In the left hand nav, clink on Active Directory and select your tenant.
 3. On the applications tab, select the TodoListService application.
-4. On the Configure tab, update the Sign-On URL and Reply URL fields to the address of your service, for example https://todolistservice-skwantoso.azurewebsites.net.  Save the configuration.
+4. On the Configure tab, update the Sign-On URL and Reply URL fields to the address of your service, for example https://todolistservicewithconditionalaccess-contoso.azurewebsites.net.  Save the configuration.
 5. Navigate to the TodoListWebApp application within your Active Directory tenant.
-6. On the Configure tab, update the Sign-On URL and the Reply URL fields to the address of your web app, for example https://todolistwebapp-skwantoso.azurewebsites.net.  Save the configuration.
+6. On the Configure tab, update the Sign-On URL and the Reply URL fields to the address of your web app, for example https://todolistwebappwithconditionalaccess-contoso.azurewebsites.net.  Save the configuration.
 
 ### Publish the TodoListWebApp to the Azure Web Site
 
 1. In Visual Studio, right click on the TodoListWebApp project in the Solution Explorer and select Publish.  Click Import, and import the publish profile that you downloaded.
-2. On the Connection tab, update the Destination URL so that it is https, for example https://todolistwebapp-skwantoso.azurewebsites.net.  Click Next.
+2. On the Connection tab, update the Destination URL so that it is https, for example https://todolistwebappwithconditionalaccess-contoso.azurewebsites.net.  Click Next.
 3. On the Settings tab, make sure Enable Organizational Authentication is NOT selected.  Click Publish.
 4. Visual Studio will publish the project and automatically open a browser to the URL of the project.  If you see the default web page of the project, the publication was successful.
 
-NOTE:  Remember, the To Do list is stored in memory in this TodoListService sample.  Azure Web Sites will spin down your web site if it is inactive, and your To Do list will get emptied.  Also, if you increase the instance count of the web site, requests will be distributed among the instances and the To Do will not be the same on each instance.
+NOTE:  Remember, the To Do list is stored in memory in this sample.  Azure Web Sites will spin down your web site if it is inactive, and your To Do list will get emptied.  Also, if you increase the instance count of the web site, requests will be distributed among the instances and the To Do will not be the same on each instance.
 
 ## About The Code
 

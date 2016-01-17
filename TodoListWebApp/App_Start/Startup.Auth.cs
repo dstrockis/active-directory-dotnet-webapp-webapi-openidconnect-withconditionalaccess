@@ -84,10 +84,28 @@ namespace TodoListWebApp
                             return Task.FromResult(0);
                         },
 
-                        AuthenticationFailed = context =>
+                        //
+                        // Handle errors in OpenID Connect responses.
+                        //
+                        AuthenticationFailed = (context) =>
                         {
                             context.HandleResponse();
                             context.Response.Redirect("/Home/Error?message=" + context.Exception.Message);
+                            return Task.FromResult(0);
+                        },
+
+                        //
+                        // If the request is for a specific resource, add the resource parameter here.
+                        //
+                        RedirectToIdentityProvider = (context) =>
+                        {
+                            if (context.OwinContext.Authentication.AuthenticationResponseChallenge != null)
+                            {
+                                if (context.OwinContext.Authentication.AuthenticationResponseChallenge.Properties.Dictionary.ContainsKey("resourceid"))
+                                {
+                                    context.ProtocolMessage.Resource = context.OwinContext.Authentication.AuthenticationResponseChallenge.Properties.Dictionary["resourceid"];
+                                }
+                            }
                             return Task.FromResult(0);
                         }
 

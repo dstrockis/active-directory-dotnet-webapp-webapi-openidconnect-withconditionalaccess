@@ -36,7 +36,9 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace TodoListWebApp.Controllers
 {
-    [Authorize]
+    // In this example we will not use automatic authentication at the controller level.
+    // If the user is not authenticated we need to manually send an authentication request with the right resource parameter.
+    // [Authorize]
     public class UserProfileController : Controller
     {
         private string graphResourceId = ConfigurationManager.AppSettings["ida:GraphResourceId"];
@@ -54,6 +56,28 @@ namespace TodoListWebApp.Controllers
             //
             UserProfile profile;
             AuthenticationResult result = null;
+
+            //
+            // Check if the user is authenticated.  If not, issue a challenge for this resource.
+            //
+            if (ClaimsPrincipal.Current.Identity.IsAuthenticated == false)
+            {
+                HttpContext.GetOwinContext().Authentication.Challenge(
+                    new Microsoft.Owin.Security.AuthenticationProperties(
+                        new Dictionary<string, string>
+                        {
+                                {"ResourceId", graphResourceId}
+                        }),
+                    OpenIdConnectAuthenticationDefaults.AuthenticationType);
+
+                profile = new UserProfile();
+                profile.DisplayName = " ";
+                profile.GivenName = " ";
+                profile.Surname = " ";
+                ViewBag.ErrorMessage = "AuthorizationRequired";
+
+                return View(profile);
+            }
 
             try
             {
@@ -101,7 +125,7 @@ namespace TodoListWebApp.Controllers
 
                 return View(profile);
             }
-            catch (Exception ee)
+            catch (AdalSilentTokenAcquisitionException ee)
             {
                 //
                 // If the user doesn't have an access token, they need to re-authorize.
@@ -117,7 +141,15 @@ namespace TodoListWebApp.Controllers
                     // If the user still has a valid session with Azure AD, they will not be prompted for their credentials.
                     // The OpenID Connect middleware will return to this controller after the sign-in response has been handled.
                     //
-                    HttpContext.GetOwinContext().Authentication.Challenge(OpenIdConnectAuthenticationDefaults.AuthenticationType);
+                    // NEW:  Include the resource ID for which the token is being requested.
+                    //
+                    HttpContext.GetOwinContext().Authentication.Challenge(
+                        new Microsoft.Owin.Security.AuthenticationProperties(
+                            new Dictionary<string, string>
+                            {
+                                {"ResourceId", graphResourceId }
+                            }),
+                        OpenIdConnectAuthenticationDefaults.AuthenticationType);
                 }
 
                 //
