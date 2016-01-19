@@ -36,10 +36,19 @@ namespace TodoListWebApp.Controllers
     {
         public void SignIn()
         {
-            // Send an OpenID Connect sign-in request.
+            //
+            // WithConditionalAccess:
+            //
+            // Sign the user in using the Graph API as an inital value for the resource
+            //
             if (!Request.IsAuthenticated)
             {
-                HttpContext.GetOwinContext().Authentication.Challenge(new AuthenticationProperties { RedirectUri = "/" }, OpenIdConnectAuthenticationDefaults.AuthenticationType);
+                HttpContext.GetOwinContext().Authentication.Challenge(
+                    new AuthenticationProperties (
+                        new Dictionary<string, string> {
+                            { Startup.ResourceKey, Startup.graphResourceId }
+                        })
+                    { RedirectUri = "/" }, OpenIdConnectAuthenticationDefaults.AuthenticationType);
             }
         }
         public void SignOut()

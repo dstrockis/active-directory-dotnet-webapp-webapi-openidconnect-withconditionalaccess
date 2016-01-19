@@ -53,6 +53,7 @@ namespace TodoListWebApp
 
         // This is the resource ID of the AAD Graph API.  We'll need this to request a token to call the Graph API.
         string graphResourceId = ConfigurationManager.AppSettings["ida:GraphResourceId"];
+        public const string ResourceKey = "resourceid";
 
         public void ConfigureAuth(IAppBuilder app)
         {
@@ -76,10 +77,18 @@ namespace TodoListWebApp
                         {
                             var code = context.Code;
 
+                            //
+                            // WithConditionalAccess:
+                            //
+                            // If this value is not present in the dictionary, it means the authorize request was issued without a resource
+                            // in the request.  You must include a resource in the request in order to guarantee you can exchange the code for a token here.
+                            //
+                            var resourceId = context.AuthenticationTicket.Properties.Dictionary[ResourceKey];
+
                             ClientCredential credential = new ClientCredential(clientId, appKey);
                             string userObjectID = context.AuthenticationTicket.Identity.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
                             AuthenticationContext authContext = new AuthenticationContext(Authority, new NaiveSessionCache(userObjectID));
-                            AuthenticationResult result = authContext.AcquireTokenByAuthorizationCode(code, new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)), credential, graphResourceId);
+                            AuthenticationResult result = authContext.AcquireTokenByAuthorizationCode(code, new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)), credential, resourceId);
 
                             return Task.FromResult(0);
                         },
@@ -103,9 +112,9 @@ namespace TodoListWebApp
                         {
                             if (context.OwinContext.Authentication.AuthenticationResponseChallenge != null)
                             {
-                                if (context.OwinContext.Authentication.AuthenticationResponseChallenge.Properties.Dictionary.ContainsKey("resourceid"))
+                                if (context.OwinContext.Authentication.AuthenticationResponseChallenge.Properties.Dictionary.ContainsKey(ResourceKey))
                                 {
-                                    context.ProtocolMessage.Resource = context.OwinContext.Authentication.AuthenticationResponseChallenge.Properties.Dictionary["resourceid"];
+                                    context.ProtocolMessage.Resource = context.OwinContext.Authentication.AuthenticationResponseChallenge.Properties.Dictionary[ResourceKey];
                                 }
                             }
                             return Task.FromResult(0);
