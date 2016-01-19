@@ -79,13 +79,11 @@ There are two projects in this sample.  Each needs to be separately registered i
 #### Configure the TodoListWebApp project
 
 1. Open the solution in Visual Studio 2013.
-2. Open the `web.config` file.
-3. Find the app key `ida:Tenant` and replace the value with your AAD tenant name.
-4. Find the app key `ida:ClientId` and replace the value with the Client ID for the TodoListWebApp from the Azure portal.
-5. Find the app key `ida:AppKey` and replace the value with the key for the TodoListWebApp from the Azure portal.
-6. If you changed the base URL of the TodoListWebApp sample, find the app key `ida:PostLogoutRedirectUri` and replace the value with the new base URL of the sample.
-7. Find the app key `todo:TodoListBaseAdress` ane make sure it has the correct value for the address of the TodoListService project.
-8. Find the app key `todo:TodoListResourceId` and replace the value with the App ID URI registered for the TodoListService, for example `https://<your_tenant_name>/TodoListService-WithConditionalAccess`.
+2. Open the `App_Start\Startup.Auth.cs` file.
+3. Find the `tenant` and replace the value with your AAD tenant name.
+4. Find the `clientId` and replace the value with the Client ID for the TodoListWebApp from the Azure portal.
+5. Find the `appKey` and replace the value with the key for the TodoListWebApp from the Azure portal.
+8. Find the `todoListResourceId` and replace the value with the App ID URI registered for the TodoListService, for example `https://<your_tenant_name>/TodoListService-WithConditionalAccess`.
 
 ### Step 5:  Trust the IIS Express SSL certificate
 

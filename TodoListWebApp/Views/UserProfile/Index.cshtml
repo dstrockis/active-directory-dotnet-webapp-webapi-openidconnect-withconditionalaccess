@@ -22,7 +22,7 @@
 
 @if (ViewBag.ErrorMessage == "AuthorizationRequired")
 {
-    <p>You have to sign-in to see your profile. Click @Html.ActionLink("here", "Index", "UserProfile", new { reauth = true }, null) to sign-in.</p>
+    <p>You have to sign-in to see your profile. Click @Html.ActionLink("here", "Index", "UserProfile") to sign-in.</p>
 }
 
 @if (ViewBag.ErrorMessage == "UnexpectedError")

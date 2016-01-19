@@ -35,24 +35,27 @@ namespace TodoListWebApp
 {
     public partial class Startup
     {
-        //
-        // The Client ID is used by the application to uniquely identify itself to Azure AD.
-        // The App Key is a credential used to authenticate the application to Azure AD.  Azure AD supports password and certificate credentials.
-        // The Metadata Address is used by the application to retrieve the signing keys used by Azure AD.
-        // The AAD Instance is the instance of Azure, for example public Azure or Azure China.
-        // The Authority is the sign-in URL of the tenant.
-        // The Post Logout Redirect Uri is the URL where the user will be redirected after they sign out.
-        //
-        private static string clientId = ConfigurationManager.AppSettings["ida:ClientId"];
-        private static string appKey = ConfigurationManager.AppSettings["ida:AppKey"];
-        private static string aadInstance = ConfigurationManager.AppSettings["ida:AADInstance"];
-        private static string tenant = ConfigurationManager.AppSettings["ida:Tenant"];
-        private static string postLogoutRedirectUri = ConfigurationManager.AppSettings["ida:PostLogoutRedirectUri"];
+        public static string clientId = "[Enter your clientID from the Azure Management Portal, e.g. b1132c6b-fbf8-43b3-a9d8-329be1c87fcb]";
+        public static string appKey = "[Enter your key from the Azure Management Portal, e.g. TpNUr1CrYMP5bkvXKwmRKQvINuTp2nyp4kIzoabgZC0=]";
+        public static string tenant = "[Enter the name of the tenant where you registered your app, e.g. mytenant.onmicrosoft.com]";
+        public const string todoListResourceId = "[Enter your App ID URI from the Azure Management Portal, e.g. https://mytenant.onmicrosoft.com/todolistservice]";
 
+        //
+        // The graphResourceId is needed to request a token to call the Graph API.
+        // The AAD Instance is the instance of Azure, for example public Azure or Azure China.
+        //
+        public const string graphResourceId = "https://graph.microsoft.com";
+        public static string aadInstance = "https://login.microsoftonline.com/{0}";
+
+        //
+        // The Redirect Uri is the URL where the user will be redirected after sign in and sign out.
+        // The Authority is the sign-in URL of the tenant.
+        //
+        public static string redirectUri = "https://localhost:44322/";
         public static readonly string Authority = String.Format(CultureInfo.InvariantCulture, aadInstance, tenant);
 
-        // This is the resource ID of the AAD Graph API.  We'll need this to request a token to call the Graph API.
-        string graphResourceId = ConfigurationManager.AppSettings["ida:GraphResourceId"];
+        public const string TenantIdClaimType = "http://schemas.microsoft.com/identity/claims/tenantid";
+        public const string ObjectIdClaimType = "http://schemas.microsoft.com/identity/claims/objectidentifier";
         public const string ResourceKey = "resourceid";
 
         public void ConfigureAuth(IAppBuilder app)
@@ -66,7 +69,8 @@ namespace TodoListWebApp
                 {
                     ClientId = clientId,
                     Authority = Authority,
-                    PostLogoutRedirectUri = postLogoutRedirectUri,
+                    PostLogoutRedirectUri = redirectUri,
+                    RedirectUri = redirectUri,
 
                     Notifications = new OpenIdConnectAuthenticationNotifications()
                     {
@@ -86,7 +90,7 @@ namespace TodoListWebApp
                             var resourceId = context.AuthenticationTicket.Properties.Dictionary[ResourceKey];
 
                             ClientCredential credential = new ClientCredential(clientId, appKey);
-                            string userObjectID = context.AuthenticationTicket.Identity.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+                            string userObjectID = context.AuthenticationTicket.Identity.FindFirst(Startup.ObjectIdClaimType).Value;
                             AuthenticationContext authContext = new AuthenticationContext(Authority, new NaiveSessionCache(userObjectID));
                             AuthenticationResult result = authContext.AcquireTokenByAuthorizationCode(code, new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)), credential, resourceId);
 

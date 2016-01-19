@@ -54,7 +54,7 @@ namespace TodoListWebApp.Controllers
         public void SignOut()
         {
             // Remove all cache entries for this user and send an OpenID Connect sign-out request.
-            string userObjectID = ClaimsPrincipal.Current.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+            string userObjectID = ClaimsPrincipal.Current.FindFirst(Startup.ObjectIdClaimType).Value;
             AuthenticationContext authContext = new AuthenticationContext(Startup.Authority, new NaiveSessionCache(userObjectID));
             authContext.TokenCache.Clear();
 
