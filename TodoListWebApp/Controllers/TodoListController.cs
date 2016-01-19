@@ -64,7 +64,7 @@ namespace TodoListWebApp.Controllers
                     new Microsoft.Owin.Security.AuthenticationProperties(
                         new Dictionary<string, string>
                         {
-                                {"resourceid", todoListResourceId }
+                                {Startup.ResourceKey, todoListResourceId }
                         }),
                     OpenIdConnectAuthenticationDefaults.AuthenticationType);
 
@@ -145,7 +145,7 @@ namespace TodoListWebApp.Controllers
                         new Microsoft.Owin.Security.AuthenticationProperties (
                             new Dictionary<string,string>
                             {
-                                {"resourceid", todoListResourceId }
+                                {Startup.ResourceKey, todoListResourceId }
                             }),
                         OpenIdConnectAuthenticationDefaults.AuthenticationType);
                 }
@@ -171,6 +171,30 @@ namespace TodoListWebApp.Controllers
         [HttpPost]
         public async Task<ActionResult> Index(string item)
         {
+            //
+            // WithConditionalAccess:
+            //
+            // Check if the user is authenticated.  If not, issue a challenge for this resource.
+            //
+            if (ClaimsPrincipal.Current.Identity.IsAuthenticated == false)
+            {
+                HttpContext.GetOwinContext().Authentication.Challenge(
+                    new Microsoft.Owin.Security.AuthenticationProperties(
+                        new Dictionary<string, string>
+                        {
+                                {Startup.ResourceKey, todoListResourceId }
+                        }),
+                    OpenIdConnectAuthenticationDefaults.AuthenticationType);
+
+                List<TodoItem> itemList = new List<TodoItem>();
+                TodoItem newItem = new TodoItem();
+                newItem.Title = "(Sign-in required to view to do list.)";
+                itemList.Add(newItem);
+                ViewBag.ErrorMessage = "AuthorizationRequired";
+                ViewBag.ResourceId = todoListResourceId;
+                return View(itemList);
+            }
+
             if (ModelState.IsValid)
             {
                 //
@@ -217,7 +241,7 @@ namespace TodoListWebApp.Controllers
                         {
                             var todoTokens = authContext.TokenCache.ReadItems().Where(a => a.Resource == todoListResourceId);
                             foreach (TokenCacheItem tci in todoTokens)
-                                authContext.TokenCache.DeleteItem(tci);  
+                                authContext.TokenCache.DeleteItem(tci);
 
                             ViewBag.ErrorMessage = "UnexpectedError";
                             TodoItem newItem = new TodoItem();
@@ -228,23 +252,24 @@ namespace TodoListWebApp.Controllers
                     }
 
                 }
-                catch (Exception ee)// TODO: verify that the exception is 'silentauth failed'
+                catch (AdalSilentTokenAcquisitionException ee)
                 {
                     //
                     // The user needs to re-authorize.  Show them a message to that effect.
                     //
                     TodoItem newItem = new TodoItem();
-                    newItem.Title = "(No items in list)";
+                    newItem.Title = "(Sign-in required to view to do list.)";
                     itemList.Add(newItem);
                     ViewBag.ErrorMessage = "AuthorizationRequired";
                     return View(itemList);
 
                 }
-                //
-                // If the call failed for any other reason, show the user an error.
-                //
-                return View("Error");
-
+                catch (Exception ex)
+                {
+                    //
+                    // If the call failed for any other reason, show the user an error.
+                    //
+                }
             }
 
             return View("Error");

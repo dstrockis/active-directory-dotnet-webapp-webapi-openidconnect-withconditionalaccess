@@ -71,7 +71,7 @@ namespace TodoListWebApp.Controllers
                     new Microsoft.Owin.Security.AuthenticationProperties(
                         new Dictionary<string, string>
                         {
-                                {"ResourceId", graphResourceId}
+                                {Startup.ResourceKey, graphResourceId}
                         }),
                     OpenIdConnectAuthenticationDefaults.AuthenticationType);
 
@@ -152,7 +152,7 @@ namespace TodoListWebApp.Controllers
                         new Microsoft.Owin.Security.AuthenticationProperties(
                             new Dictionary<string, string>
                             {
-                                {"ResourceId", graphResourceId }
+                                {Startup.ResourceKey, graphResourceId }
                             }),
                         OpenIdConnectAuthenticationDefaults.AuthenticationType);
                 }
